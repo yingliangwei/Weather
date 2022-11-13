@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <application
+        android:name=".android.app.MyAPP"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:preserveLegacyExternalStorage="true"
+        android:requestLegacyExternalStorage="true"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Weather"
+        tools:targetApi="31">
+
+        <activity
+            android:name=".android.MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".android.WeatherActivity"
+            android:exported="true" />
+
+        <service
+            android:name=".android.service.AutoUpdateService"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="INTENT_ACTION_NOTIFY_RECEIVER_LAST" />
+                <action android:name="INTENT_ACTION_NOTIFY_RECEIVER_PLAY" />
+                <action android:name="INTENT_ACTION_NOTIFY_RECEIVER_NEXT" />
+            </intent-filter>
+
+        </service>
+    </application>
+
+</manifest>
