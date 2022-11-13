@@ -1,13 +1,16 @@
 package com.example.weather.android;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -94,7 +97,6 @@ public class WeatherActivity extends MiracleGardenActivity<ActivityWeatherBindin
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 final String responseText = response.body().string();
-                Log.d("数据", responseText);
                 final Weather weather = Utility.handleWeatherResponse(responseText);
                 runOnUiThread(() -> {
                     if (weather != null) {
@@ -103,9 +105,7 @@ public class WeatherActivity extends MiracleGardenActivity<ActivityWeatherBindin
                         editor.apply();
                         mWeatherId = "" + weather.location.name;
                         showWeatherInfo(weather);
-
-                        Utils.sendNotification(getApplicationContext(),id, weather.now.temperature + "℃" + " " + weather.daily.get(0).dayText);
-
+                        Utils.sendNotification(getApplicationContext(), id, weather.now.temperature + "℃" + " " + weather.daily.get(0).dayText);
                     } else {
                         Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
                     }
@@ -127,7 +127,6 @@ public class WeatherActivity extends MiracleGardenActivity<ActivityWeatherBindin
 
 
     /**
-     *
      * 加载必应每日一图
      */
     private void loadBingPic() {
@@ -162,43 +161,97 @@ public class WeatherActivity extends MiracleGardenActivity<ActivityWeatherBindin
     /**
      * 处理并展示Weather实体类中的数据。
      */
+    @SuppressLint("SetTextI18n")
     private void showWeatherInfo(Weather weather) {
         String cityName = weather.location.name;
         String updateTime = weather.lastUpdate.split(" ")[1];
         String degree = weather.now.temperature + "℃";
-        String weatherInfo = weather.now.windDirection;
+        Daily daily = weather.daily.get(0);
+        String weatherInfo = "天气:" + daily.dayText + " " + weather.now.windDirection + ":" + weather.now.windScale;
+        //图标
+        binding.now.image.setImageDrawable(drawable(daily.dayText));
+        //标题
         binding.title.titleCity.setText(cityName);
-
+        //天气时间
         binding.title.titleUpdateTime.setText(updateTime);
+        //温度
         binding.now.degreeText.setText(degree);
+        //天气风向
         binding.now.weatherInfoText.setText(weatherInfo);
         binding.forecast.forecastLayout.removeAllViews();
 
         String comfort = "湿度：" + weather.now.humidity + "%";
         String carWash = "气压：" + weather.now.pressure + "hPa";
+
         String sport = weather.now.windDirection + " " + weather.now.windScale;
         findViewById(R.id.comfort_text);
         binding.suggestion.comfortText.setText(comfort);
         binding.suggestion.carWashText.setText(carWash);
         binding.suggestion.sportText.setText(sport);
         binding.weatherLayout.setVisibility(View.VISIBLE);
+
         Intent intent = new Intent(this, AutoUpdateService.class);
         startService(intent);
+
         if (weather.daily == null) {
             return;
         }
+        //7天天气
         for (Daily forecast : weather.daily) {
             View view = LayoutInflater.from(this).inflate(R.layout.forecast_item, binding.forecast.forecastLayout, false);
             TextView dateText = (TextView) view.findViewById(R.id.date_text);
             TextView infoText = (TextView) view.findViewById(R.id.info_text);
             TextView maxText = (TextView) view.findViewById(R.id.max_text);
+            ImageView imageView = (ImageView) view.findViewById(R.id.icon);
             TextView minText = (TextView) view.findViewById(R.id.min_text);
             dateText.setText(forecast.date);
             infoText.setText(forecast.dayText);
-            maxText.setText(String.valueOf(forecast.high));
-            minText.setText(String.valueOf(forecast.low));
+            imageView.setImageDrawable(drawable(forecast.dayText));
+            maxText.setText(forecast.high + "℃");
+            minText.setText(forecast.low + "℃");
             binding.forecast.forecastLayout.addView(view);
         }
+    }
+
+    @SuppressLint("UseCompatLoadingForDrawables")
+    private Drawable drawable(String dayText) {
+        String[] strings = new String[]{
+                "晴",
+                "多云",
+                "阴",
+                "大风",
+                "小雨",
+                "中雨",
+                "大雨",
+                "暴雨",
+                "雷阵雨",
+                "雨夹雪",
+                "小雪",
+                "中雪",
+                "大雪",
+                "暴雪",
+                "冰雹",
+                "轻度雾霾",
+                "中度雾霾",
+                "重度雾霾",
+                "雾",
+                "浮尘"};
+        int[] ints = new int[]{
+                R.drawable.ic_clear_day,
+                R.drawable.ic_partly_cloud_day,
+                R.drawable.ic_cloudy,
+                R.drawable.ic_cloudy,
+                R.drawable.ic_light_rain, R.drawable.ic_moderate_rain, R.drawable.ic_heavy_rain, R.drawable.ic_storm_rain,
+                R.drawable.ic_thunder_shower, R.drawable.ic_sleet, R.drawable.ic_light_snow,
+                R.drawable.ic_moderate_snow, R.drawable.ic_heavy_snow, R.drawable.ic_heavy_snow,
+                R.drawable.ic_hail, R.drawable.ic_light_haze, R.drawable.ic_moderate_haze, R.drawable.ic_heavy_haze,
+                R.drawable.ic_fog, R.drawable.ic_fog};
+        for (int i = 0; i < strings.length; i++) {
+            if (strings[i].equals(dayText)) {
+                return getDrawable(ints[i]);
+            }
+        }
+        return getResources().getDrawable(R.drawable.ic_clear_day);
     }
 
 }
